@@ -17,3 +17,31 @@ def add():
     db.session.add(new_todo)
     db.session.commit()
     return "Added a new Todo"
+
+@app.route('/complete/<int:id>')
+def complete(id):
+    todo = Todos.query.get(id)
+    todo.completed = True
+    db.session.commit()
+    return "Todo is now complete"
+
+@app.route('/incomplete/<int:id>')
+def incomplete(id):
+    todo = Todos.query.get(id)
+    todo.completed = False
+    db.session.commit()
+    return "Todo is now incomplete"
+
+@app.route('/update/<task>')
+def update(task):
+    latest_todo = Todos.query.order_by(Todos.id.desc()).first()
+    latest_todo.task = task
+    db.session.commit()
+    return "Updated most recent Todo"
+
+@app.route('delete')
+def delete():
+     latest_todo = Todos.query.order_by(Todos.id.desc()).first()
+     db.session.delete(latest_todo)
+     db.session.commit()
+     return "Deleted most recent Todo"
