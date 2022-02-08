@@ -1,5 +1,3 @@
-from email.policy import default
-from enum import unique
 from application import db
 
 class Todos(db.Model):
