@@ -39,7 +39,7 @@ def update(task):
     db.session.commit()
     return "Updated most recent Todo"
 
-@app.route('delete')
+@app.route('/delete')
 def delete():
      latest_todo = Todos.query.order_by(Todos.id.desc()).first()
      db.session.delete(latest_todo)
