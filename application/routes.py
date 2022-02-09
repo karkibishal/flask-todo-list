@@ -1,47 +1,56 @@
+from crypt import methods
+from flask import render_template, url_for, redirect, request
 from application import app, db
 from application.models import Todos
-from flask import render_template
+from application.forms import TodoForm
 
-@app.route('/')
+@app.route('/', methods=['POST', 'GET'])
 def index():
     all_todos = Todos.query.all()
-    return render_template('home.html', all_todos=all_todos)
+    return render_template('index.html', title="Todo List App", todos=todos, totals=totals)
 
-@app.route('/add')
+@app.route('/add', methods=['POST', 'GET'])
 def add():
-    latest_todo = Todos.query.order_by(Todos.id.desc()).first()
-    if latest_todo:
-        new_todo = Todos(task="New Todo"+str(latest_todo.id + 1))
-    else:
-        new_todo = Todos(task="New Todo1")
-    db.session.add(new_todo)
-    db.session.commit()
-    return "Added a new Todo"
+    form = TodoForm()
+    if form.validate_on_submit():
+        todo = Todos(
+                task = form.task.data,
+                complete = False
+                )
+        db.session.add(todo)
+        db.session.commit()
+        return redirect(url_for('index'))
+    return render_template('add.html', title="Add a new todo", form=form)
 
 @app.route('/complete/<int:id>')
 def complete(id):
     todo = Todos.query.get(id)
-    todo.completed = True
+    todo.complete = True
     db.session.commit()
-    return "Todo is now complete"
+    return redirect(url_for('index'))
 
 @app.route('/incomplete/<int:id>')
 def incomplete(id):
     todo = Todos.query.get(id)
-    todo.completed = False
+    todo.complete = False
     db.session.commit()
-    return "Todo is now incomplete"
+    return redirect(url_for('index'))
 
-@app.route('/update/<task>')
-def update(task):
-    latest_todo = Todos.query.order_by(Todos.id.desc()).first()
-    latest_todo.task = task
-    db.session.commit()
-    return "Updated most recent Todo"
+@app.route('/update/<int:id>', methods=['POST', 'GET'])
+def update(id):
+    form = TodoForm()
+    todo = Todos.query.get(id)
+    if form.validate_on_submit():
+        todo.task = form.task.data
+        db.session.commit()
+        return redirect(url_for('index'))
+    elif request.method == 'GET':
+        form.task.data = todo.task
+    return render_template('update.html', title = "Update your todo", form=form)
 
-@app.route('/delete')
+@app.route('/delete/<int:id>')
 def delete():
-     latest_todo = Todos.query.order_by(Todos.id.desc()).first()
-     db.session.delete(latest_todo)
+     todo = Todos.query.get(id)
+     db.session.delete(todo)
      db.session.commit()
-     return "Deleted most recent Todo"
+     return redirect(url_for('index'))
